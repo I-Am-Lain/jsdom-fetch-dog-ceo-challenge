@@ -1,89 +1,105 @@
 console.log('%c HI', 'color: firebrick')
 
-
 const imgUrl = "https://dog.ceo/api/breeds/image/random/4"
 const breedUrl = 'https://dog.ceo/api/breeds/list/all'
 
+const imageContainer = document.querySelector("#dog-image-container")
 
-////////////////////////////
-///////////////////////////
-function grabImages(url) {
-    fetch(url)
-  .then(resp => resp.json())
-  .then(json => parseImages(json));
-} 
+const breedContainer = document.querySelector("#dog-breeds")
+const breedDropdown = document.querySelector("#breed-dropdown")
+const breedArray = []  // for filtering and sorting later. is filled with all dog names
 
-function parseImages(jsonObject) {
-    let ourArray = jsonObject['message']
-    ourArray.forEach(image => {
-        const img = document.createElement('img')
-        img.setAttribute("src", image)
-
-        document.querySelector("#dog-image-container").append(img)
-
-    })
-}
-/////////////////////////////
-/////////////////////////////
-function grabBreeds(url) {
-    fetch(url)
-  .then(resp => resp.json())
-  .then(json => parseBreeds(json));
-} 
-
-function parseBreeds(jsonObject) {
-    let ourArray = Object.keys(jsonObject['message'])
-    ourArray.forEach(breed => {
-        breedArray.push(breed)
-        const li = document.createElement('li')
-        li.innerText = breed
-
-        li.addEventListener("click", function(event){
-            li.setAttribute("style", "color:red")
-        })
-
-        li.addEventListener("mouseover", function(event){
-            li.setAttribute("style", "color:blue")
-        })
-
-        document.querySelector("#dog-breeds").append(li)
-
-    })
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+function grabDogs() {
+    fetch(imgUrl)
+    .then(resp => resp.json())
+    .then(json => parseDogs(json))
 }
 
-////////////////////////////////////
-////////////////////////////////////
-
-function addSortingFunctionality(){
-    const dropDown = document.querySelector('#breed-dropdown')
-
-
-
-    dropDown.addEventListener("change", function(event){
-        const dogList = document.querySelectorAll("#dog-breeds li")
-        dogList.forEach(dog => {
-            dog.setAttribute("style", "display:block")
-
-        })
-
-
-        const currentSelect = event.target.value
-        console.log(currentSelect)
-
-
-        dogList.forEach(dog => {
-            if (!dog.innerText.startsWith(currentSelect)) {
-                dog.setAttribute("style", "display:none")
-            }
-        })
-    })
+function parseDogs(json){
+  json["message"].forEach(dog => {
+    renderDog(dog)
+  })
 }
 
+function renderDog(dog){
+  const img = document.createElement("img")
+  img.src = dog
+  img.height = '300'
+  
+  
+  imageContainer.appendChild(img)
+}
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+function grabBreeds() {
+    fetch(breedUrl)
+    .then(resp => resp.json())
+    .then(json => parseBreeds(json))
+}
 
-////////////////////////////////////
-////////////////////////////////////
-document.addEventListener("DOMContentLoaded", function() {
-    grabImages(imgUrl)
-    grabBreeds(breedUrl)
-    addSortingFunctionality()
+function parseBreeds(json){
+  Object.keys(json["message"]).forEach(breed => {
+    breedArray.push(breed)               // to have an array of ALL dog names, for later sorting
+    renderBreed(breed)
+  })
+}
+
+function renderBreed(breed){
+  const li = document.createElement("li")
+  li.innerText = breed
+  
+  li.addEventListener("click", function(event){
+    li.style = "color:green"
+  })
+  
+  breedContainer.appendChild(li)
+}
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+function filterBreeds(){
+  breedDropdown.addEventListener("change", function(event){   // when the dropdown is "changed"
+
+    let newDoggy = breedArray.filter(function(dog){  // create New Array from filtering through BreedArray
+      if (dog.startsWith(event.target.value)) {       // if the breed starts with the selection,
+        return dog                                 // return that breed to our new Array
+      }
+    })
+
+    breedContainer.innerHTML = ""    // clear the current breed HTML, before building the new ones from our selected Array
+
+    newDoggy.forEach(function(dog){  // calls our renderBreed, which creates a new <li> and appends each breed
+      renderBreed(dog)
+    })
+  })
+}
+
+    ////////////////////////////////////////this was the "older" way to do it //////////////////////////////////////
+    //
+    //let dogList = document.querySelectorAll("#dog-breeds li")
+    //
+    // dogList.forEach(dog => {
+    //   dog.style = "display:true"
+    // })
+    // dogList.forEach(dog => {
+    //   if (!dog.innerText.startsWith(event.target.value)){
+    //     dog.style = "display:none"
+    //   }
+    // })
+
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+function main(){
+  grabDogs()
+  grabBreeds()
+  filterBreeds()
+}
+
+document.addEventListener("DOMContentLoaded", (event) => {  
+  main()
 })
